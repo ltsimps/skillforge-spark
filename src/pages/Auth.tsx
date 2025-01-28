@@ -1,39 +1,51 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleAuth = async (type: "login" | "signup") => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
       setLoading(true);
-      
-      const { error } = type === "login" 
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
       if (error) throw error;
 
-      if (type === "login") {
-        navigate("/");
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully logged in.",
-        });
-      } else {
-        toast({
-          title: "Check your email",
-          description: "We sent you a confirmation link.",
-        });
-      }
+      toast({
+        title: "Success",
+        description: "Check your email for the confirmation link.",
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -46,52 +58,66 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Welcome to SkillForge
+            Welcome
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Share your wisdom with future generations
+            Sign in to your account or create a new one
           </p>
         </div>
-        <div className="mt-8 space-y-6">
+        <form className="mt-8 space-y-6">
           <div className="rounded-md shadow-sm space-y-4">
-            <Input
-              type="email"
-              placeholder="Email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-            />
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
+              <Input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email address"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+              />
+            </div>
           </div>
 
           <div className="flex gap-4">
             <Button
-              className="w-full"
-              onClick={() => handleAuth("login")}
+              type="submit"
+              onClick={handleLogin}
               disabled={loading}
+              className="w-full"
             >
               Sign in
             </Button>
             <Button
-              className="w-full"
-              variant="outline"
-              onClick={() => handleAuth("signup")}
+              type="button"
+              onClick={handleSignUp}
               disabled={loading}
+              variant="outline"
+              className="w-full"
             >
               Sign up
             </Button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
