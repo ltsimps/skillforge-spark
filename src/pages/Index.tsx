@@ -1,10 +1,31 @@
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Brain, Globe, MessageSquareShare, Mic, Sparkles, Clock } from "lucide-react";
+import { ArrowRight, Brain, Globe, MessageSquareShare, Mic, Sparkles, Clock, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <div className="absolute top-4 right-4">
+        <Button variant="ghost" onClick={handleLogout}>
+          <LogOut className="h-4 w-4 mr-2" />
+          Logout
+        </Button>
+      </div>
       <Navigation />
       
       <main>
